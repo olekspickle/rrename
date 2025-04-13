@@ -1,0 +1,32 @@
+[package]
+name = "rrename"
+authors = ["Oleks Pickle <22867443+olekspickle@users.noreply.github.com>"]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/olekspickle/rrename"
+description = """"
+Rename files matching a regular expression by replacing parts of their name,
+also able to replace some characters I consider noise to kebab case
+"""
+
+[dependencies]
+anyhow = "1.0.93"
+clap = { version = "4.5.21", features = ["derive", "cargo"] }
+rayon = "1.10.0"
+regex = "1.11.1"
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
+strum = { version = "0.26.3", features = ["derive"] }
+walkdir = "2.5.0"
+
+[lib]
+name = "rrename"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rrename"
+path = "bin/rrename.rs"
+
+[dev-dependencies]
+expect-test = "1.5.0"
