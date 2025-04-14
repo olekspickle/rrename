@@ -1,17 +1,17 @@
 use crate::case::Case;
 use clap::{Parser, crate_authors, crate_name, crate_version};
+use jwalk::WalkDir;
+use rand::{Rng, SeedableRng, rngs::SmallRng};
 use regex::{NoExpand, Regex};
 use std::{
     fs,
     path::{Path, PathBuf},
 };
-use walkdir::WalkDir;
 
-const ABOUT: &str = "Rename files in batch.\nExample:\nrrename -n";
+const ABOUT: &str = "Rename files in batch.\nExample:\nrrename";
 
-/// Rename files matching a regular expression by replacing parts of their name.  Similar to the
-/// util-linux `rename` command, but with support of regular expressions.
-/// Also supports case names: kebab-case, TODO: others
+/// Rename files matching a regular expression by replacing parts of their name.
+/// Similar to the util-linux `rename` command, but with support of regular expressions.
 //#[command(arg_required_else_help = true)]
 #[derive(Debug, Default, Clone, Parser)]
 #[command(name = crate_name!())]
@@ -82,17 +82,19 @@ impl Rrename {
     }
 
     pub fn run(&self) -> anyhow::Result<Vec<(PathBuf, PathBuf)>> {
+        let mut renamed = 0;
+        let mut rng = SmallRng::seed_from_u64(405);
         let total: Vec<_> = WalkDir::new(&self.path)
             .into_iter()
             .filter_map(Result::ok)
             .collect();
-        let mut renames: Vec<(PathBuf, PathBuf)> = Vec::with_capacity(total.len());
-        let mut renamed = 0;
+        let mut renames: Vec<(PathBuf, PathBuf)> = Vec::with_capacity(total.len() * 2);
 
         // Go from topmost entries to lower ones, iteratievely breadth-first,
-        // because entry canot be renamed if the parent is a subject to rename
+        // because walkdir entry canot be renamed if the parent is a subject to rename
         for d in 0..=self.depth {
             let mut entries: Vec<_> = WalkDir::new(&self.path)
+                .min_depth(d)
                 .max_depth(d)
                 .into_iter()
                 .filter_map(Result::ok)
@@ -103,7 +105,7 @@ impl Rrename {
 
             for entry in entries.iter_mut() {
                 let old_path = entry.path();
-                if let Some(new_path) = self.rrename_entry(old_path) {
+                if let Some(new_path) = self.rrename_entry(&old_path) {
                     current.push((old_path.to_path_buf(), new_path.clone()));
                 }
             }
@@ -116,9 +118,10 @@ impl Rrename {
                 );
             }
 
-            current.sort_by_key(|el| el.1.as_os_str().len());
-            current.dedup_by(|a, b| a.1 == b.1);
-            for (from, to) in &current {
+            // TODO: figure out how to avoid clonin' wholeass array each depth level
+            let brchkd = current.clone();
+            current.sort_by_key(|el| el.1.to_string_lossy().into_owned());
+            for (from, to) in &mut current {
                 if from == to {
                     if !self.quiet {
                         println!("No change for '{}'", from.display());
@@ -126,12 +129,30 @@ impl Rrename {
                     continue;
                 }
 
+                let dupes = brchkd.iter().fold(0, |mut acc, el| {
+                    if el.1 == *to {
+                        acc += 1;
+                    }
+                    acc
+                });
+
+                if dupes > 1 {
+                    let n: u16 = rng.random();
+                    if let Some(ext) = to.extension() {
+                        if let Some(name) = to.file_stem() {
+                            let name = name.to_str().unwrap_or_default();
+                            let ext = ext.to_str().unwrap_or_default();
+                            to.set_file_name(format!("{name}-{n}.{ext}"));
+                        }
+                    }
+                };
+
                 if !self.quiet {
                     println!("'{}' -> '{}'", from.display(), to.display());
                 }
 
                 if !self.dry_run {
-                    match fs::rename(from, to) {
+                    match fs::rename(&mut *from, to) {
                         Ok(_) => renamed += 1,
                         Err(e) => eprintln!("Failed to rename {}: {}", from.display(), e),
                     }
@@ -141,15 +162,17 @@ impl Rrename {
             renames.extend(current);
         }
 
-        renames.sort_by_key(|el| el.1.as_os_str().len());
+        renames.sort_by_key(|el| el.1.to_string_lossy().into_owned());
         renames.dedup_by(|a, b| a.1 == b.1);
+        renames.sort_by_key(|el| el.1.to_string_lossy().len());
 
         println!("Renamed: {renamed}, depth:{}", self.depth);
 
         Ok(renames)
     }
 
-    /// My very specific preferences on what I consider noise
+    /// My very specific opinion on what I consider noise
+    /// Some are helpful though: for example '&' may cause issues with some unix tools
     fn denoise(s: &str) -> String {
         s.to_lowercase()
             //.replace(r"\[[^]]*\]", "")
@@ -167,13 +190,6 @@ impl Rrename {
 
     pub fn rrename_entry(&self, path: &Path) -> Option<PathBuf> {
         let name = path.to_str()?;
-        //let name = path.file_stem()?.to_str()?;
-        //let ext = path
-        //    .extension()
-        //    .unwrap_or_default()
-        //    .to_str()
-        //    .unwrap_or_default();
-        //let parent = path.parent();
 
         let regexed = if let Some(regex) = &self.regex {
             let rep = self.sub.clone().unwrap_or_default();
@@ -201,14 +217,6 @@ impl Rrename {
             regexed
         };
 
-        //if let Some(p) = parent {
-        //    let new_full = if ext.is_empty() {
-        //        denoised
-        //    } else {
-        //        format!("{}.{}", denoised, ext)
-        //    };
-        //    return Some(p.join(new_full));
-        //}
         Some(denoised.into())
     }
 }
@@ -229,24 +237,32 @@ mod tests {
                     "test-dir",
                 ),
                 (
-                    "test-dir/another-dir-and-co",
-                    "test-dir/another-dir-and-co",
-                ),
-                (
-                    "test-dir/another-dir-and-co/Some & Track.txt",
-                    "test-dir/another-dir-and-co/some-and-track.txt",
-                ),
-                (
-                    "test-dir/some-dir",
+                    "test-dir/Some Dir",
                     "test-dir/some-dir",
                 ),
                 (
-                    "test-dir/some-dir/SOME_fILe.txt",
+                    "test-dir/Another Dir & Co",
+                    "test-dir/another-dir-and-co",
+                ),
+                (
+                    "test-dir/Some Dir/SOME_fILe.txt",
                     "test-dir/some-dir/some-file.txt",
                 ),
                 (
-                    "test-dir/some-dir/some-text-file.txt",
-                    "test-dir/some-dir/some-text-file.txt",
+                    "test-dir/Some Dir/some, text_file.txt",
+                    "test-dir/some-dir/some-text-file-25057.txt",
+                ),
+                (
+                    "test-dir/Some Dir/some,text_file.txt",
+                    "test-dir/some-dir/some-text-file-57497.txt",
+                ),
+                (
+                    "test-dir/Another Dir & Co/Some [some#bs].txt",
+                    "test-dir/another-dir-and-co/some-[some#bs].txt",
+                ),
+                (
+                    "test-dir/Another Dir & Co/Some & Track.txt",
+                    "test-dir/another-dir-and-co/some-and-track.txt",
                 ),
             ]
         "#]]

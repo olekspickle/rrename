@@ -13,6 +13,8 @@ also able to replace some characters I consider noise to kebab case
 [dependencies]
 anyhow = "1.0.93"
 clap = { version = "4.5.21", features = ["derive", "cargo"] }
+jwalk = "0.8.1"
+rand = "0.9.0"
 rayon = "1.10.0"
 regex = "1.11.1"
 serde = { version = "1.0.215", features = ["derive"] }
