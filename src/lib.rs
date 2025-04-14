@@ -7,16 +7,26 @@
 //!
 //! ```bash
 //! > ls
-//! test-dir
-//! ├── Another Dir & Co
-//! │   ├── Some [some#bs].txt
-//! │   └── Some & Track.txt
-//! └── Some Dir
-//! ├── SOME_fILe.txt
-//! └── some,text_file.txt
+//!  backup
+//!  ├── Another Dir & Co
+//!  │   ├── Some [some#bs].txt
+//!  │   └── Some & Track.txt
+//!  └── Some Dir
+//!      ├── SOME_fILe.txt
+//!      ├── some, text_file.txt
+//!      └── some,text_file.txt
 //!
 //! > rrename
 //! > ls
+//!
+//!  test-dir
+//!  ├── another-dir-and-co
+//!  │   ├── some-and-track.txt
+//!  │   └── some-[some#bs].txt
+//!  └── some-dir
+//!      ├── some-file.txt
+//!      ├── some-text-file-25057.txt
+//!      └── some-text-file-57497.txt
 //!
 //!```
 //!
