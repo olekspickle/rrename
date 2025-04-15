@@ -74,7 +74,6 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    needs: get-version
     needs:
       - get-version
     env:
@@ -129,4 +128,3 @@ jobs:
           release_name: ${{ env.VERSION }}
           tag: ${{ env.VERSION }}
           overwrite: true
-
