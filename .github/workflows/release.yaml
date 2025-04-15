@@ -53,7 +53,7 @@ jobs:
           mv target/release/${{ env.pkg_name }} .
       - name: Bundle release
         run: |
-          tar -czf ${{ env.pkg_name }}_linux.tar.gz ${{ env.pkg_name }} assets credits
+          tar -czf ${{ env.pkg_name }}_linux.tar.gz ${{ env.pkg_name }}
 
       - name: Upload package to workflow artifacts
         uses: actions/upload-artifact@v4
