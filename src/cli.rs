@@ -172,7 +172,8 @@ impl Rrename {
     }
 
     /// My very specific opinion on what I consider noise
-    /// Some are helpful though: for example '&' may cause issues with some unix tools
+    /// Some are helpful though:
+    /// for example '&' may cause issues with some unix tools, like find or ffmpeg
     fn denoise(s: &str) -> String {
         s.to_lowercase()
             //.replace(r"\[[^]]*\]", "")
@@ -183,6 +184,7 @@ impl Rrename {
             .replace("_", "-")
             .replace(",", "-")
             .replace(",-", "-")
+            .replace("\t", "-")
             .replace("&", "-and-")
             .replace("---", "-")
             .replace("--", "-")
