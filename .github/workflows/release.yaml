@@ -58,8 +58,8 @@ jobs:
       - name: Upload package to workflow artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.pkg_name }}_linux.zip
-          path: ${{ env.pkg_name }}_linux.zip
+          name: ${{ env.pkg_name }}_linux.tar.gz
+          path: ${{ env.pkg_name }}_linux.tar.gz
           retention-days: 1
           overwrite: true
 
