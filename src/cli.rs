@@ -27,6 +27,10 @@ pub struct Rrename {
     #[clap(short, long)]
     pub quiet: bool,
 
+    /// Opposite of verbose, basically - mention every file\dir even if it is not changed
+    #[clap(short = 'v', long, conflicts_with = "quiet")]
+    pub verbose: bool,
+
     /// Depth program should go into
     #[clap(short = 'L', long, default_value = "3")]
     pub depth: usize,
@@ -76,7 +80,7 @@ impl Rrename {
         self
     }
 
-    pub fn with_dry_run(mut self) -> Self {
+    pub fn dry_run(mut self) -> Self {
         self.dry_run = true;
         self
     }
@@ -90,7 +94,7 @@ impl Rrename {
             .collect();
         let mut renames: Vec<(PathBuf, PathBuf)> = Vec::with_capacity(total.len() * 2);
 
-        // Go from topmost entries to lower ones, iteratievely breadth-first,
+        // Go from topmost entries to lower ones, iteratively breadth-first,
         // because walkdir entry canot be renamed if the parent is a subject to rename
         for d in 0..=self.depth {
             let mut entries: Vec<_> = WalkDir::new(&self.path)
@@ -123,7 +127,7 @@ impl Rrename {
             current.sort_by_key(|el| el.1.to_string_lossy().into_owned());
             for (from, to) in &mut current {
                 if from == to {
-                    if !self.quiet {
+                    if self.verbose {
                         println!("No change for '{}'", from.display());
                     }
                     continue;
@@ -230,41 +234,49 @@ mod tests {
 
     #[test]
     fn rename_test_dir() {
-        let cli = Rrename::parse().with_path("test-dir").with_dry_run();
+        let cli = Rrename::parse().with_path("mock").dry_run();
         let renames = cli.run().unwrap();
         expect![[r#"
             [
                 (
-                    "test-dir",
-                    "test-dir",
+                    "mock",
+                    "mock",
                 ),
                 (
-                    "test-dir/Some Dir",
-                    "test-dir/some-dir",
+                    "mock/Some Dir",
+                    "mock/some-dir",
                 ),
                 (
-                    "test-dir/Another Dir & Co",
-                    "test-dir/another-dir-and-co",
+                    "mock/Another Dir & Co",
+                    "mock/another-dir-and-co",
                 ),
                 (
-                    "test-dir/Some Dir/SOME_fILe.txt",
-                    "test-dir/some-dir/some-file.txt",
+                    "mock/Some Dir/SOME_fILe.txt",
+                    "mock/some-dir/some-file.txt",
                 ),
                 (
-                    "test-dir/Some Dir/some, text_file.txt",
-                    "test-dir/some-dir/some-text-file-25057.txt",
+                    "mock/Some -  Word With III dCi135_",
+                    "mock/some-word-with-iii-dci135-",
                 ),
                 (
-                    "test-dir/Some Dir/some,text_file.txt",
-                    "test-dir/some-dir/some-text-file-57497.txt",
+                    "mock/Some Dir/some,text_file.txt",
+                    "mock/some-dir/some-text-file-25057.txt",
                 ),
                 (
-                    "test-dir/Another Dir & Co/Some [some#bs].txt",
-                    "test-dir/another-dir-and-co/some-[some#bs].txt",
+                    "mock/Some Dir/some, text_file.txt",
+                    "mock/some-dir/some-text-file-57497.txt",
                 ),
                 (
-                    "test-dir/Another Dir & Co/Some & Track.txt",
-                    "test-dir/another-dir-and-co/some-and-track.txt",
+                    "mock/Another Dir & Co/Some [some#bs].txt",
+                    "mock/another-dir-and-co/some-[some#bs].txt",
+                ),
+                (
+                    "mock/Another Dir & Co/Some & Track.txt",
+                    "mock/another-dir-and-co/some-and-track.txt",
+                ),
+                (
+                    "mock/Some -  Word With III dCi135_/Some Word F3500 dCi135 StereoM10.txt",
+                    "mock/some-word-with-iii-dci135-/some-word-f3500-dci135-stereom10.txt",
                 ),
             ]
         "#]]
