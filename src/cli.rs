@@ -180,16 +180,14 @@ impl Rrename {
     /// for example '&' may cause issues with some unix tools, like find or ffmpeg
     fn denoise(s: &str) -> String {
         s.to_lowercase()
-            //.replace(r"\[[^]]*\]", "")
-            .replace(r#"[＂"]"#, "")
-            .replace(r"\.-\| \.", "-")
-            .replace("\\", "")
+            // \W will select all non "word" characters equivalent to [^a-zA-Z0-9_]
+            // \S will select all non "whitespace" characters equivalent to [ \t\n\r\f\v]
+            // _ will select "_" because we negate it when using the \W and need to add it back in
+            .replace(r"[\W\S_]", "-")
             .replace(" ", "-")
-            .replace("_", "-")
-            .replace(",", "-")
             .replace(",-", "-")
-            .replace("\t", "-")
-            .replace("&", "-and-")
+            .replace("[_,]", "-")
+            .replace("&", "and")
             .replace("---", "-")
             .replace("--", "-")
     }
