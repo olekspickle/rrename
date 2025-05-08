@@ -1,32 +1,32 @@
-//!
-//! # Overview
-//!
-//! A command-line tool/library for file mass-renaming using regex or case names.
+//! A very opinionated command-line tool/library for file mass-renaming using regex
 //!
 //! # Example
 //!
 //! ```bash
 //! > ls
-//!  backup
+//!  mock
 //!  ├── Another Dir & Co
 //!  │   ├── Some [some#bs].txt
 //!  │   └── Some & Track.txt
-//!  └── Some Dir
-//!      ├── SOME_fILe.txt
-//!      ├── some, text_file.txt
-//!      └── some,text_file.txt
+//!  ├── Some Dir
+//!  │   ├── SOME_fILe.txt
+//!  │   ├── some, text_file.txt
+//!  │   └── some,text_file.txt
+//!  └── Some -  Word With III dCi135_
+//!      └── Some Word F3500 dCi135 StereoM10.txt
 //!
 //! > rrename
 //! > ls
-//!
-//!  test-dir
+//!  mock
 //!  ├── another-dir-and-co
 //!  │   ├── some-and-track.txt
 //!  │   └── some-[some#bs].txt
-//!  └── some-dir
-//!      ├── some-file.txt
-//!      ├── some-text-file-25057.txt
-//!      └── some-text-file-57497.txt
+//!  ├── some-dir
+//!  │   ├── some-file.txt
+//!  │   ├── some-text-file-25057.txt
+//!  │   └── some-text-file-57497.txt
+//!  └── some-word-with-iii-dci135-
+//!      └── some-word-f3500-dci135-stereom10.txt
 //!
 //!```
 //!
