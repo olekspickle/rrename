@@ -2,6 +2,7 @@
 //!
 //! # Example
 //!
+//! ## no arguments run
 //! ```bash
 //! > ls
 //!  mock
@@ -28,7 +29,16 @@
 //!  └── some-word-with-iii-dci135-
 //!      └── some-word-f3500-dci135-stereom10.txt
 //!
-//!```
+//! ```
+//!
+//! ## using regex to substitute
+//! ```bash
+//! > ls
+//! 3pv-some-file.mp4
+//! > rrename -E "3pv-" -s ""
+//! './3pv-some-file.mp4' -> './some-file.mp4'
+//! Renamed: 1, depth:1
+//! ```
 //!
 //! # kudos
 //! [wrench](https://github.com/funnyboy-roks/wrench) was taken as a base
