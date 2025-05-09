@@ -93,10 +93,12 @@ impl Rrename {
             .filter_map(Result::ok)
             .collect();
         let mut renames: Vec<(PathBuf, PathBuf)> = Vec::with_capacity(total.len() * 2);
+        let mut actual_depth = 0;
 
         // Go from topmost entries to lower ones, iteratively breadth-first,
         // because walkdir entry canot be renamed if the parent is a subject to rename
         for d in 0..=self.depth {
+            actual_depth = d;
             let mut entries: Vec<_> = WalkDir::new(&self.path)
                 .min_depth(d)
                 .max_depth(d)
@@ -170,7 +172,7 @@ impl Rrename {
         renames.dedup_by(|a, b| a.1 == b.1);
         renames.sort_by_key(|el| el.1.to_string_lossy().len());
 
-        println!("Renamed: {renamed}, depth:{}", self.depth);
+        println!("Renamed: {renamed}, depth:{actual_depth}");
 
         Ok(renames)
     }
