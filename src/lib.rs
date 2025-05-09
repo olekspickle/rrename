@@ -42,6 +42,7 @@
 //!
 //! # kudos
 //! [wrench](https://github.com/funnyboy-roks/wrench) was taken as a base
+//! Powered by [jwalk](https://github.com/byron/jwalk) - walkdir on steroids using rayon
 
 pub mod case;
 pub mod cli;

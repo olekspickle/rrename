@@ -44,5 +44,6 @@ Renamed: 1, depth:1
 
 ## kudos
 [wrench](https://github.com/funnyboy-roks/wrench) was taken as a base
+Powered by [jwalk](https://github.com/byron/jwalk) - walkdir on steroids using rayon
 
 License: MIT OR Apache-2.0
