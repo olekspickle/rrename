@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const ABOUT: &str = "Rename files in batch.\nExample:\nrrename";
+const ABOUT: &str = "Rename files in batch.\nExample:\nrrename my-dir";
 
 /// Rename files matching a regular expression by replacing parts of their name.
 /// Similar to the util-linux `rename` command, but with support of regular expressions.
