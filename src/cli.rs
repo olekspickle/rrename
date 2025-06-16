@@ -56,7 +56,7 @@ pub struct Rrename {
     pub first: bool,
 
     /// Replace noisy chars with unix friendly: &,"'_
-    #[clap(long, default_value_t = true)]
+    #[clap(long, default_value_t = false)]
     pub denoise: bool,
 
     /// Regex to use to search in the string.
