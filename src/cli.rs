@@ -43,10 +43,6 @@ pub struct Rrename {
     #[clap(default_value = ".")]
     pub path: PathBuf,
 
-    /// Recurse into subdirectories
-    #[clap(short, long, default_value_t = true)]
-    pub recursive: bool,
-
     /// Prevent Regex parts from being expanded (i.e., `$1`, `$name`)
     #[clap(long)]
     pub no_expand: bool,
@@ -186,6 +182,8 @@ impl Rrename {
             // \S will select all non "whitespace" characters equivalent to [ \t\n\r\f\v]
             // _ will select "_" because we negate it when using the \W and need to add it back in
             .replace(r"[\W\S_]", "-")
+            .replace("'", "-")
+            .replace("\"", "-")
             .replace(" ", "-")
             .replace(",-", "-")
             .replace("[_,]", "-")
