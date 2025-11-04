@@ -56,7 +56,7 @@ jobs:
           tar -czf ${{ env.pkg_name }}_linux.tar.gz ${{ env.pkg_name }}
 
       - name: Upload package to workflow artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ env.pkg_name }}_linux.tar.gz
           path: ${{ env.pkg_name }}_linux.tar.gz
