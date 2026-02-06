@@ -1,5 +1,6 @@
 use crate::case::Case;
 use clap::{Parser, crate_authors, crate_name, crate_version};
+use clap_verbosity_flag::InfoLevel;
 use jwalk::WalkDir;
 use rand::{Rng, SeedableRng, rngs::SmallRng};
 use regex::{NoExpand, Regex};
@@ -7,8 +8,9 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use tracing::{debug, error, info, trace};
 
-const ABOUT: &str = "Rename files in batch.\nExample:\nrrename my-dir";
+const ABOUT: &str = "Rename files in batch.\nExample:\nrrename -vv --dry-run --denoise my-dir";
 
 /// Rename files matching a regular expression by replacing parts of their name.
 /// Similar to the util-linux `rename` command, but with support of regular expressions.
@@ -20,16 +22,12 @@ const ABOUT: &str = "Rename files in batch.\nExample:\nrrename my-dir";
 pub struct Rrename {
     /// Perform no filesystem operations and display to the user the changes that would happen
     /// without the flag
-    #[clap(short = 'n', long, conflicts_with = "quiet")]
+    #[clap(short = 'n', long)]
     pub dry_run: bool,
 
-    /// Don't echo the renames to STDOUT
-    #[clap(short, long)]
-    pub quiet: bool,
-
-    /// Opposite of verbose, basically - mention every file\dir even if it is not changed
-    #[clap(short = 'v', long, conflicts_with = "quiet")]
-    pub verbose: bool,
+    /// Verbosity levels, supports [trace, debug, info, warn, error]: -q, -v, -vv, -vvv, -vvvv
+    #[command(flatten)]
+    pub verbosity: clap_verbosity_flag::Verbosity<InfoLevel>,
 
     /// Depth program should go into
     #[clap(short = 'L', long, default_value = "3")]
@@ -40,7 +38,7 @@ pub struct Rrename {
     pub case: Case,
 
     /// Rename all files within the directory provided
-    #[clap(default_value = ".")]
+    #[cfg_attr(debug_assertions, clap(default_value = "mock"))]
     pub path: PathBuf,
 
     /// Prevent Regex parts from being expanded (i.e., `$1`, `$name`)
@@ -52,7 +50,7 @@ pub struct Rrename {
     pub first: bool,
 
     /// Replace noisy chars with unix friendly: &,"'_
-    #[clap(long, default_value_t = false)]
+    #[clap(short, long, default_value_t = false)]
     pub denoise: bool,
 
     /// Regex to use to search in the string.
@@ -67,12 +65,13 @@ pub struct Rrename {
 }
 
 impl Rrename {
-    pub fn new() -> Rrename {
-        Rrename::default()
-    }
-
     pub fn with_path(mut self, p: impl Into<PathBuf>) -> Self {
         self.path = p.into();
+        self
+    }
+
+    pub fn with_denoise(mut self) -> Self {
+        self.denoise = true;
         self
     }
 
@@ -125,9 +124,7 @@ impl Rrename {
             current.sort_by_key(|el| el.1.to_string_lossy().into_owned());
             for (from, to) in &mut current {
                 if from == to {
-                    if self.verbose {
-                        println!("No change for '{}'", from.display());
-                    }
+                    trace!("No change for '{}'", from.display());
                     continue;
                 }
 
@@ -140,23 +137,21 @@ impl Rrename {
 
                 if dupes > 1 {
                     let n: u16 = rng.random();
-                    if let Some(ext) = to.extension() {
-                        if let Some(name) = to.file_stem() {
-                            let name = name.to_str().unwrap_or_default();
-                            let ext = ext.to_str().unwrap_or_default();
-                            to.set_file_name(format!("{name}-{n}.{ext}"));
-                        }
+                    if let Some(ext) = to.extension()
+                        && let Some(name) = to.file_stem()
+                    {
+                        let name = name.to_str().unwrap_or_default();
+                        let ext = ext.to_str().unwrap_or_default();
+                        to.set_file_name(format!("{name}-{n}.{ext}"));
                     }
                 };
 
-                if !self.quiet {
-                    println!("'{}' -> '{}'", from.display(), to.display());
-                }
+                debug!("'{}' -> '{}'", from.display(), to.display());
 
                 if !self.dry_run {
                     match fs::rename(&mut *from, to) {
                         Ok(_) => renamed += 1,
-                        Err(e) => eprintln!("Failed to rename {}: {}", from.display(), e),
+                        Err(e) => error!("Failed to rename {}: {}", from.display(), e),
                     }
                 }
             }
@@ -168,7 +163,7 @@ impl Rrename {
         renames.dedup_by(|a, b| a.1 == b.1);
         renames.sort_by_key(|el| el.1.to_string_lossy().len());
 
-        println!("Renamed: {renamed}, depth:{actual_depth}");
+        info!("Renamed: {renamed}, depth: {actual_depth}");
 
         Ok(renames)
     }
@@ -179,15 +174,12 @@ impl Rrename {
     fn denoise(s: &str) -> String {
         s.to_lowercase()
             // \W will select all non "word" characters equivalent to [^a-zA-Z0-9_]
-            // \S will select all non "whitespace" characters equivalent to [ \t\n\r\f\v]
             // _ will select "_" because we negate it when using the \W and need to add it back in
-            .replace(r"[\W\S_]", "-")
-            .replace("'", "-")
-            .replace("\"", "-")
-            .replace(" ", "-")
-            .replace(",-", "-")
-            .replace("[_,]", "-")
+            .replace(['：', '｜', '⧸', '\'', '"', ',', '#', '+', '_', '$'], "-")
+            .replace("-/", "/") // trailing -
+            .replace(r"[_,]", "-")
             .replace("&", "and")
+            .replace(" ", "-")
             .replace("---", "-")
             .replace("--", "-")
     }
@@ -232,7 +224,7 @@ mod tests {
 
     #[test]
     fn rename_test_dir() {
-        let cli = Rrename::parse().with_path("mock").dry_run();
+        let cli = Rrename::parse().with_path("mock").dry_run().with_denoise();
         let renames = cli.run().unwrap();
         expect![[r#"
             [
@@ -257,24 +249,28 @@ mod tests {
                     "mock/some-word-with-iii-dci135-",
                 ),
                 (
-                    "mock/Some Dir/some,text_file.txt",
-                    "mock/some-dir/some-text-file-25057.txt",
+                    "mock/Some Dir/some, text_file.txt",
+                    "mock/some-dir/some-text-file.txt",
                 ),
                 (
-                    "mock/Some Dir/some, text_file.txt",
-                    "mock/some-dir/some-text-file-57497.txt",
+                    "mock/Some Dir/some,text_file$.txt",
+                    "mock/some-dir/some-text-file-.txt",
                 ),
                 (
                     "mock/Another Dir & Co/Some [some#bs].txt",
-                    "mock/another-dir-and-co/some-[some#bs].txt",
+                    "mock/another-dir-and-co/some-[some-bs].txt",
                 ),
                 (
                     "mock/Another Dir & Co/Some & Track.txt",
                     "mock/another-dir-and-co/some-and-track.txt",
                 ),
                 (
+                    "mock/Some Dir/some'weird'file\"with\"brackets.txt",
+                    "mock/some-dir/some-weird-file-with-brackets.txt",
+                ),
+                (
                     "mock/Some -  Word With III dCi135_/Some Word F3500 dCi135 StereoM10.txt",
-                    "mock/some-word-with-iii-dci135-/some-word-f3500-dci135-stereom10.txt",
+                    "mock/some-word-with-iii-dci135/some-word-f3500-dci135-stereom10.txt",
                 ),
             ]
         "#]]

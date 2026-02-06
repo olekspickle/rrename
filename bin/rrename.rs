@@ -9,6 +9,9 @@ fn main() -> anyhow::Result<()> {
     }
 
     let cli = Rrename::parse();
+    tracing_subscriber::fmt()
+        .with_max_level(cli.verbosity)
+        .init();
     cli.run()?;
 
     Ok(())
