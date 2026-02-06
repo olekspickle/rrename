@@ -7,7 +7,7 @@ updates:
   - package-ecosystem: cargo
     directory: /
     schedule:
-      interval: daily
+      interval: monthly
     ignore:
       - dependency-name: "*"
         # patch and minor updates don't matter for libraries as consumers of this library build
@@ -16,4 +16,3 @@ updates:
         # built with the exact set of dependencies and those are up to date.
         update-types:
           - "version-update:semver-patch"
-          - "version-update:semver-minor"
