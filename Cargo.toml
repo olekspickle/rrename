@@ -4,6 +4,7 @@ authors = ["Oleks Pickle <22867443+olekspickle@users.noreply.github.com>"]
 version = "0.1.3"
 edition = "2024"
 license = "MIT OR Apache-2.0"
+exclude = ["mock"]
 repository = "https://github.com/olekspickle/rrename"
 description = """"
 Opinionated tool to rename files in batch.
