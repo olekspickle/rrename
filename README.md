@@ -15,7 +15,7 @@ cargo install rrename
 - [x] restore files after rename in batch
 - [x] denoise files
 - [x] regex substitution
-- [x] verbocity levels ([clap_verbosity_flag] is amazing)
+- [x] verbocity levels ([clap_verbosity_flag] is amazing): just add `-v, -vv, -vvv` to your hearts content
 - [ ] case conversion
 
 ## Example
@@ -104,4 +104,4 @@ Powered by [jwalk](https://github.com/byron/jwalk) - walkdir on steroids using r
 
 License: MIT OR Apache-2.0
 
-[clap_verbosity_flag](https://docs.rs/clap-verbosity-flag/latest/clap_verbosity_flag/)
+[clap_verbosity_flag]: https://docs.rs/clap-verbosity-flag/latest/clap_verbosity_flag/
