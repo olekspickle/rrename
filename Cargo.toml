@@ -1,7 +1,7 @@
 [package]
 name = "rrename"
 authors = ["Oleks Pickle <22867443+olekspickle@users.noreply.github.com>"]
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 exclude = ["mock"]
@@ -13,6 +13,7 @@ Match regular expression, replace some characters I consider noise to kebab case
 
 [dependencies]
 anyhow = "1.0.93"
+chrono = { version = "0.4.44", features = ["now"], default-features = false }
 clap = { version = "4.5.21", features = ["derive", "cargo"] }
 clap-verbosity-flag = { version = "3.0.4", default-features = false, features = ["tracing"] }
 jwalk = "0.8.1"

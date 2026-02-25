@@ -47,4 +47,4 @@
 pub mod case;
 pub mod cli;
 
-pub use cli::Rrename;
+pub use cli::RrenameCli;
