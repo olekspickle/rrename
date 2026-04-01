@@ -14,7 +14,7 @@ Match regular expression, replace some characters I consider noise to kebab case
 [dependencies]
 anyhow = "1.0.93"
 chrono = { version = "0.4.44", features = ["now"], default-features = false }
-clap = { version = "4.5.21", features = ["derive", "cargo"] }
+clap = { version = "4.6.0", features = ["derive", "cargo"] }
 clap-verbosity-flag = { version = "3.0.4", default-features = false, features = ["tracing"] }
 jwalk = "0.8.1"
 rand = "0.10.0"
