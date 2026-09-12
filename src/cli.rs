@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use clap::{Parser, crate_authors, crate_name, crate_version};
 use clap_verbosity_flag::InfoLevel;
 use jwalk::WalkDir;
-use rand::{Rng, SeedableRng, rngs::SmallRng};
+use rand::{RngExt, SeedableRng, rngs::SmallRng};
 use regex::{NoExpand, Regex};
 use std::{
     cmp::Reverse,
