@@ -60,7 +60,7 @@ pub struct RrenameCli {
     pub first: bool,
 
     /// Whether to save the renamed list to a file
-    #[clap(short, long, default_value_t = true)]
+    #[clap(long, default_value_t = true)]
     pub save: bool,
 
     /// Replace noisy chars like:
@@ -317,7 +317,9 @@ impl RrenameCli {
     }
 
     fn fs_rename(&self, from: &Path, to: &Path, renamed: &mut usize) -> anyhow::Result<()> {
-        if !self.dry_run {
+        if self.dry_run {
+            debug!("DRY RUN'{}' -> '{}'", from.display(), to.display());
+        } else {
             if let Some(parent) = to.parent() {
                 fs::create_dir_all(parent)?;
             }
